@@ -150,6 +150,7 @@ const actors = [{
 const getBar = id => bars.find(bar => bar.id === id)
 const getEvent = id => events.find(event => event.id === id)
 
+
 for(var i=0;i < bars.length;i++){
     events[i].price = getBar(events[i].barId).pricePerPerson * events[i].persons
         + getBar(events[i].barId).pricePerHour * events[i].time;

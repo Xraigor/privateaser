@@ -147,55 +147,98 @@ const actors = [{
   }]
 }];
 
+
+//# idea of features
+//I have a list of bars
+//I have a list of events
+//For each event of my events
+//I want to compute the booking price
+//based on time spent and persons
+//Each bar define its price by hour and persons
+//
+//# pseudo code
+//for each event of events
+//bar = event.bar
+//event.price = (time + persons) * bar.price
+
+
 const getBar = id => bars.find(bar => bar.id === id)
 const getEvent = id => events.find(event => event.id === id)
 
-
-for(var i=0;i < bars.length;i++){
-    events[i].price = getBar(events[i].barId).pricePerPerson * events[i].persons
-        + getBar(events[i].barId).pricePerHour * events[i].time;
-
-    if(events[i].persons >= 10 && events[i].persons < 30){
-        events[i].price = events[i].price * 0.9;
-    }
-    else if(events[i].persons >= 30 && events[i].persons <60){
-        events[i].price = events[i].price * 0.7;
-        }
-    else if(events[i].persons >= 60){
-             events[i].price = events[i].price * 0.5;
-    }
-    events[i].commissionprice = events[i].price * 0.3;
-    events[i].commission.insurance = 0.5 * events[i].commissionprice;
-    events[i].commission.treasury = events[i].persons;
-    events[i].commission.privateaser = events[i].commissionprice - events[i].commission.insurance - events[i].commission.treasury;
-
-    if(events[i].options.deductibleReduction == true){
-    events[i].afterprice = events[i].price + events[i].persons;
-    events[i].commission.afterprivateaser = events[i].commission.privateaser + events[i].persons;
+//events.forEach(function (event){
+//
+//const barId = event.barId;
+//const time = event.time;
+//const persons = event.persons;
+//const bar = getBar(barId);
+//
+//event.price = time * bar.pricePerHour + persons * bar.pricePerPerson;
+//})
+  const discount = persons => {
+    if (persons > 60) {
+      return 0.5;
     }
 
+    if (persons > 20) {
+      return 0.3;
+    }
+
+    if (persons > 10) {
+      return 0.1;
+    }
+
+    return 0;
+  };
+events.forEach(event =>{
+
+const barId = event.barId;
+const time = event.time;
+const persons = event.persons;
+const bar = getBar(barId);
+
+event.price = (time * bar.pricePerHour + persons * bar.pricePerPerson)*(1 - discount(persons));
+event.commissionprice = event.price * 0.3;
+event.commission.insurance = event.commissionprice * 0.5;
+event.commission.treasury = persons;
+event.commission.privateaser = event.commissionprice - event.commission.insurance - event.commission.treasury;
+
+if(event.deductibleReduction = true){
+event.finalprice = event.price + persons;
+event.commission.afterprivateaser = event.commission.privateaser + persons;
 }
-
-for(var i = 0; i < events.length; i++){
-    actors[i].event = getEvent(actors[i].eventId);
-    for(var j = 0; j < actors[i].payment.length; j++){
-    if(actors[i].payment[j].who == 'booker'){
-    actors[i].payment[j].amout = getEvent(actors[i].eventId).afterprice;
-    }
-    else if(actors[i].payment[j].who == 'bar'){
-        actors[i].payment[j].amout = getEvent(actors[i].eventId).price - getEvent(actors[i].eventId).commissionprice;
-        }
-    else if(actors[i].payment[j].who == 'insurance'){
-        actors[i].payment[j].amout = getEvent(actors[i].eventId).commission.insurance;
-        }
-    else if(actors[i].payment[j].who == 'treasury'){
-        actors[i].payment[j].amout = getEvent(actors[i].eventId).commission.treasury;
-        }
-    else if(actors[i].payment[j].who == 'privateaser'){
-        actors[i].payment[j].amout = getEvent(actors[i].eventId).commission.afterprivateaser;
-        }
-    }
+if(event.deductibleReduction = false){
+event.finalprice = event.price;
+event.commission.afterprivateaser = event.commission.privateaser;
 }
+})
+
+actors.forEach(actor =>{
+
+const eventId = actor.eventId;
+const event = getEvent(eventId);
+
+actor.payment.forEach(payment =>{
+
+if(payment.who == 'booker'){
+    payment.amount = event.finalprice;
+    }
+    else if(payment.who == 'bar'){
+        payment.amount = event.price - event.commissionprice;
+        }
+    else if(payment.who == 'insurance'){
+        payment.amount = event.commission.insurance;
+        }
+    else if(payment.who == 'treasury'){
+        payment.amount = event.commission.treasury;
+        }
+    else if(payment.who == 'privateaser'){
+        payment.amount = event.commission.afterprivateaser;
+        }
+
+})
+
+})
+
 
 
 console.log(bars);
